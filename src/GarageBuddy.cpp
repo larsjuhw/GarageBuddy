@@ -76,10 +76,6 @@ void loop() {
 }
 
 void handlePinRead() {
-    // If reportStateEnabled == false, we don't want to read the pin at all
-    if (!reportStateEnabled) {
-        return;
-    }
 
     int reedStateNew = digitalRead(PIN_REED);
 
@@ -93,8 +89,10 @@ void handlePinRead() {
         payloadTargetState[9] = !reedStateNew + 48;
         payloadCurrentState[9] = !reedStateNew + 48;
 
-        client.publish(MQTT_TO_HOMEBRIDGE, payloadTargetState);
-        client.publish(MQTT_TO_HOMEBRIDGE, payloadCurrentState);
+        if (reportStateEnabled) {
+            client.publish(MQTT_TO_HOMEBRIDGE, payloadTargetState);
+            client.publish(MQTT_TO_HOMEBRIDGE, payloadCurrentState);
+        }
 
         debugPrint("(REED) New reed state: garage door ");
         debugPrintln(reedStateNew ? "opened" : "closed");
