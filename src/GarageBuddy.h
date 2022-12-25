@@ -1,6 +1,6 @@
 /*
 @(#)File:            $RCSfile: GarageBuddy.h $
-@(#)Version:         $Revision: 0.1 $
+@(#)Version:         $Revision: 0.2 $
 @(#)Last changed:    $Date: 2020/07/22 $
 @(#)Purpose:         ESP8266 garage door controller
 @(#)Author:          L. Wolter
@@ -13,22 +13,34 @@
 
 #define MQTT_TOPIC_IN "debug/" MQTT_CLIENT "/in"
 #define MQTT_TOPIC_OUT "debug/" MQTT_CLIENT "/out"
-#define MQTT_FROM_HOMEBRIDGE "homebridge/from/set/" HOMEBRIDGE_NAME
+#define MQTT_FROM_HOMEBRIDGE "homebridge/from/set/" ACCESSORY_NAME
 #define MQTT_TO_HOMEBRIDGE "homebridge/to/set"
 
-#define PAYLOAD_TARGET                          \
-    "{\"value\":1,\"name\":\"" HOMEBRIDGE_NAME  \
-    "\",\"service_name\":\"" HOMEBRIDGE_SERVICE \
+#define PAYLOAD_TARGET                                    \
+    "{\"value\":1,\"name\":\"" ACCESSORY_NAME             \
+    "\",\"service_name\":\"" DOOR_SERVICE_NAME            \
     "\",\"characteristic\":\"TargetDoorState\"}"
-#define PAYLOAD_CURRENT                         \
-    "{\"value\":1,\"name\":\"" HOMEBRIDGE_NAME  \
-    "\",\"service_name\":\"" HOMEBRIDGE_SERVICE \
+#define PAYLOAD_CURRENT                                   \
+    "{\"value\":1,\"name\":\"" ACCESSORY_NAME             \
+    "\",\"service_name\":\"" DOOR_SERVICE_NAME            \
     "\",\"characteristic\":\"CurrentDoorState\"}"
+
+#define PAYLOAD_SENSOR_DETECTED                           \
+    "{\"value\":true,\"name\":\"" ACCESSORY_NAME          \
+    "\",\"service_name\":\"" SENSOR_SERVICE_NAME          \
+    "\",\"characteristic\":\"MotionDetected\"}"
+
+#define PAYLOAD_SENSOR_UNDETECTED                         \
+    "{\"value\":false,\"name\":\"" ACCESSORY_NAME  \
+    "\",\"service_name\":\"" SENSOR_SERVICE_NAME          \
+    "\",\"characteristic\":\"MotionDetected\"}"
 
 const char* strOn = "on";
 const char* strOff = "off";
 
 void handlePinRead();
+void publish_current_state();
+void blip_sensor_state();
 const char* boolToCstr(bool boolValue);
 void wifiConnect();
 void mqttReconnect();
@@ -45,6 +57,7 @@ void commandBlink();
 void commandRelay();
 void commandToggle();
 void commandHelp();
+void commandMsToggle();
 
 typedef void (*func_type)(void);
 
@@ -58,6 +71,7 @@ func_type commandFunctions[COMMANDS_AMOUNT] = {
     commandRelay,
     commandToggle,
     commandHelp,
+    commandMsToggle,
 };
 
 char commandNames[COMMANDS_AMOUNT][10] = {
@@ -69,4 +83,5 @@ char commandNames[COMMANDS_AMOUNT][10] = {
     "relay",
     "toggle",
     "help",
+    "mstoggle",
 };

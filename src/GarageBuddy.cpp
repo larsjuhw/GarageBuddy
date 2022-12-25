@@ -1,6 +1,6 @@
 /*
 @(#)File:            $RCSfile: GarageBuddy.cpp $
-@(#)Version:         $Revision: 0.1 $
+@(#)Version:         $Revision: 0.2 $
 @(#)Last changed:    $Date: 2020/07/27 $
 @(#)Purpose:         ESP8266 garage door controller
 @(#)Author:          L. Wolter
@@ -31,6 +31,7 @@ PubSubClient client(espClient);
 
 int readCount = 0;   // handlePinRead() will only validate the new state if
                      // readCount exceeds REED_VALIDATION_COUNT
+int lastReedState = -1;
 int reedState = -1;  // Init as -1 so handlePinRead() will update it
 
 bool reportStateEnabled = true;  // state reporting means telling Homebridge
@@ -40,10 +41,12 @@ bool listenToHomebridge = true;  // listenToHomebridge decides if the controller
                                  // should subscribe to homebridge's updates
 
 bool otaEnabled = false;
+bool msWarningEnabled = true;
 int relayState = HIGH;
 
 unsigned long lastBlinkMillis = 0;
 unsigned long readDelayMillis = 0;
+unsigned long lastDoorChangeMillis = 0;
 
 void setup() {
     delay(10);
@@ -78,25 +81,53 @@ void loop() {
 void handlePinRead() {
 
     int reedStateNew = digitalRead(PIN_REED);
+    unsigned long currentMillis = millis();
 
-    if (reedStateNew == reedState) {
+    if (lastReedState != reedStateNew) {
         readCount = 0;
-    } else if ((++readCount >= REED_VALIDATION_COUNT) &&
-               ((reedStateNew == CLOSED) || (millis() > readDelayMillis))) {
-        reedState = reedStateNew;
+    } else {
+        readCount++;
+    }
 
-        // The payload starts with {"value":x}, where x is 9th in the char array
-        payloadTargetState[9] = !reedStateNew + 48;
-        payloadCurrentState[9] = !reedStateNew + 48;
+    lastReedState = reedStateNew;
 
-        if (reportStateEnabled) {
-            client.publish(MQTT_TO_HOMEBRIDGE, payloadTargetState);
-            client.publish(MQTT_TO_HOMEBRIDGE, payloadCurrentState);
+    if ((++readCount >= REED_VALIDATION_COUNT) &&
+               ((reedStateNew == CLOSED) || (currentMillis > readDelayMillis))) {
+        // At this point, the new reed state is validated to be consistent.
+        if (reedState != reedStateNew) {
+            lastDoorChangeMillis = currentMillis;
+            reedState = reedStateNew;
+            publish_current_state();
+        } else {
+            if ( msWarningEnabled && reedState == OPENED &&
+                (currentMillis - lastDoorChangeMillis >= (LEFT_OPEN_TIME * 1000))) {
+                lastDoorChangeMillis = currentMillis;
+                blip_sensor_state();
+            }
         }
 
         debugPrint("(REED) New reed state: garage door ");
         debugPrintln(reedStateNew ? "opened" : "closed");
     }
+}
+
+void publish_current_state() {
+    // The payload starts with {"value":x}, where x is 9th in the char array
+    payloadTargetState[9] = !reedState + 48;
+    payloadCurrentState[9] = !reedState + 48;
+
+    if (reportStateEnabled) {
+        client.publish(MQTT_TO_HOMEBRIDGE, payloadTargetState);
+        delay(50);
+        client.publish(MQTT_TO_HOMEBRIDGE, payloadCurrentState);
+    }
+}
+
+void blip_sensor_state() {
+    debugPrintln("Garage door left open.. blipping sensor state");
+    client.publish(MQTT_TO_HOMEBRIDGE, PAYLOAD_SENSOR_DETECTED);
+    delay(200);
+    client.publish(MQTT_TO_HOMEBRIDGE, PAYLOAD_SENSOR_UNDETECTED);
 }
 
 const char* boolToCstr(bool boolValue) {
@@ -201,7 +232,7 @@ void commandOTA() {
 
     ArduinoOTA.onEnd([]() {
         mqttReconnect();
-        client.publish(MQTT_TOPIC_OUT, "Updated complete");
+        client.publish(MQTT_TOPIC_OUT, "Update complete");
         client.loop();
     });
 
@@ -213,7 +244,7 @@ void commandOTA() {
 }
 
 void commandStatus() {
-    char buffer[100];
+    char buffer[125];
 
     unsigned long uptimeSeconds = millis() / 1000;
     const char* doorState = reedState ? "opened" : "closed";
@@ -221,9 +252,10 @@ void commandStatus() {
     const char* relayStateString = boolToCstr(!relayState);
     const char* reportStateString = boolToCstr(reportStateEnabled);
     const char* listeningString = boolToCstr(listenToHomebridge);
+    const char* msWarningEnabledString = boolToCstr(msWarningEnabled);
 
-    sprintf(buffer, "uptime: %lu secs / door: %s / ota: %s / relay: %s / reporting: %s / listening: %s",
-            uptimeSeconds, doorState, otaString, relayStateString, reportStateString, listeningString);
+    sprintf(buffer, "uptime: %lu secs / door: %s / ota: %s / relay: %s / reporting: %s / listening: %s / msenabled: %s",
+            uptimeSeconds, doorState, otaString, relayStateString, reportStateString, listeningString, msWarningEnabledString);
 
     client.publish(MQTT_TOPIC_OUT, buffer);
     debugPrint("(STAT) ");
@@ -287,7 +319,7 @@ void commandToggle() {
         strncpy(toggleString, "Unsubscribed from", 18);
     }
 
-    char buffer[34];
+    char buffer[35];
     sprintf(buffer, "%s homebridge topic", toggleString);
 
     debugPrint("(TGL)  ");
@@ -295,8 +327,19 @@ void commandToggle() {
     client.publish(MQTT_TOPIC_OUT, buffer);
 }
 
+void commandMsToggle() {
+    msWarningEnabled = !msWarningEnabled;
+    if (msWarningEnabled) {
+        client.publish(MQTT_TOPIC_OUT, "Motion sensor warnings enabled");
+        debugPrintln("(TGL) Motion sensor warnings enabled");
+    } else {
+        client.publish(MQTT_TOPIC_OUT, "Motion sensor warnings disabled");
+        debugPrintln("(TGL) Motion sensor warnings disabled");
+    }
+}
+
 void commandHelp() {
-    const char* helpMessage = "[ota/status/restart/shadow/blink/relay/toggle/help]";
+    const char* helpMessage = "[ota/status/restart/shadow/blink/relay/toggle/mstoggle/help]";
 
     debugPrint("(HELP) ");
     debugPrintln(helpMessage);

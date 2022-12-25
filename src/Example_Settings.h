@@ -17,8 +17,8 @@ All these constants are required to be defined, it likely will not compile other
 #define MQTT_CLIENT             "gd"                    // The MQTT client name that your device will use
                                                         // This is also used in the MQTT debug topics
 
-#define HOMEBRIDGE_NAME         "gd"                    // The name of your Homebridge accessory
-#define HOMEBRIDGE_SERVICE      "Garage Door"           // The service name of your Homebridge accessory
+#define ACCESSORY_NAME         "gd"                    // The name of your Homebridge accessory
+#define DOOR_SERVICE_NAME      "Garage Door"           // The service name of your Homebridge accessory
 
 #define PIN_REED                D7                      // The GPIO pin that the reed is connected to (the other end is connected to GND)
 #define PIN_RELAY               D6                      // The GPIO pin that the relay is connected to
@@ -34,5 +34,6 @@ All these constants are required to be defined, it likely will not compile other
 
 #define BLINK_DURATION          150                     // Time the relay gets its voltage switched before reverting in milliseconds
 #define BLINK_MIN_DELAY         750                     // Minimum milliseconds between two relay 'blinks'
+#define LEFT_OPEN_TIME          30                      // Seconds of door being left open until a notification is sent
 
 */
