@@ -151,7 +151,7 @@ void wifiConnect() {
 void mqttReconnect() {
     while (!client.connected()) {
         debugPrint("(MQTT) Attempting MQTT connection.. ");
-        if (client.connect(MQTT_CLIENT)) {
+        if (client.connect(MQTT_CLIENT, MQTT_USERNAME, MQTT_PASSWORD)) {
             debugPrintln("connected");
             client.publish(MQTT_TOPIC_OUT, "I am online!");
 

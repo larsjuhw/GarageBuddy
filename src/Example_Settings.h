@@ -16,6 +16,8 @@ All these constants are required to be defined, it likely will not compile other
 #define MQTT_IP                 "192.168.0.200"         // The IP address of your mqtt broker
 #define MQTT_CLIENT             "gd"                    // The MQTT client name that your device will use
                                                         // This is also used in the MQTT debug topics
+#define MQTT_USERNAME           "username"              // Username to use for MQTT authentication
+#define MQTT_PASSWORD           "password"              // Password to use for MQTT authentication
 
 #define ACCESSORY_NAME         "gd"                    // The name of your Homebridge accessory
 #define DOOR_SERVICE_NAME      "Garage Door"           // The service name of your Homebridge accessory
