@@ -95,6 +95,8 @@ void handlePinRead() {
                ((reedStateNew == CLOSED) || (currentMillis > readDelayMillis))) {
         // At this point, the new reed state is validated to be consistent.
         if (reedState != reedStateNew) {
+            debugPrint("(REED) New reed state: garage door ");
+            debugPrintln(reedStateNew ? "opened" : "closed");
             lastDoorChangeMillis = currentMillis;
             reedState = reedStateNew;
             publish_current_state();
@@ -105,9 +107,6 @@ void handlePinRead() {
                 blip_sensor_state();
             }
         }
-
-        debugPrint("(REED) New reed state: garage door ");
-        debugPrintln(reedStateNew ? "opened" : "closed");
     }
 }
 
