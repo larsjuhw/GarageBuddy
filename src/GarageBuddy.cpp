@@ -104,6 +104,7 @@ void handlePinRead() {
             if ( msWarningEnabled && reedState == OPENED &&
                 (currentMillis - lastDoorChangeMillis >= (LEFT_OPEN_TIME * 1000))) {
                 lastDoorChangeMillis = currentMillis;
+                debugPrintln("Garage door left open.. blipping sensor state");
                 blip_sensor_state();
             }
         }
@@ -123,7 +124,6 @@ void publish_current_state() {
 }
 
 void blip_sensor_state() {
-    debugPrintln("Garage door left open.. blipping sensor state");
     client.publish(MQTT_TO_HOMEBRIDGE, PAYLOAD_SENSOR_DETECTED);
     delay(200);
     client.publish(MQTT_TO_HOMEBRIDGE, PAYLOAD_SENSOR_UNDETECTED);
@@ -337,8 +337,12 @@ void commandMsToggle() {
     }
 }
 
+void commandMsTest() {
+    blip_sensor_state();
+}
+
 void commandHelp() {
-    const char* helpMessage = "[ota/status/restart/shadow/blink/relay/toggle/mstoggle/help]";
+    const char* helpMessage = "[ota/status/restart/shadow/blink/relay/toggle/mstoggle/mstest/help]";
 
     debugPrint("(HELP) ");
     debugPrintln(helpMessage);

@@ -58,6 +58,7 @@ void commandRelay();
 void commandToggle();
 void commandHelp();
 void commandMsToggle();
+void commandMsTest();
 
 typedef void (*func_type)(void);
 
@@ -72,6 +73,7 @@ func_type commandFunctions[COMMANDS_AMOUNT] = {
     commandToggle,
     commandHelp,
     commandMsToggle,
+    commandMsTest,
 };
 
 char commandNames[COMMANDS_AMOUNT][10] = {
@@ -84,4 +86,5 @@ char commandNames[COMMANDS_AMOUNT][10] = {
     "toggle",
     "help",
     "mstoggle",
+    "mstest",
 };
