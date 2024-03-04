@@ -7,9 +7,6 @@ All these constants are required to be defined, it likely will not compile other
                                                         // to define GPIO pins as D1, D2 etc.
 #include <pins_arduino.h>
 
-#define DEBUG                   1                       // Whether debug mode should be enabled or not
-                                                        // At the moment it only toggles the Serial connection
-
 #define WIFI_SSID               "Example"               // The SSID that the controller connects to
 #define WIFI_PASSWORD           "1234567890"            // The password of that SSID
 
@@ -19,23 +16,11 @@ All these constants are required to be defined, it likely will not compile other
 #define MQTT_USERNAME           "username"              // Username to use for MQTT authentication
 #define MQTT_PASSWORD           "password"              // Password to use for MQTT authentication
 
-#define ACCESSORY_NAME         "gd"                    // The name of your Homebridge accessory
-#define DOOR_SERVICE_NAME      "Garage Door"           // The service name of your Homebridge accessory
-
 #define PIN_REED                D7                      // The GPIO pin that the reed is connected to (the other end is connected to GND)
 #define PIN_RELAY               D6                      // The GPIO pin that the relay is connected to
 
-#define REED_VALIDATION_COUNT   50000                   // If the door state changes (open/closed), this new state will only be
-                                                        // accepted after this number of consecutive reads of the reed pin.
-                                                        // 50000 seems to be a pretty good value as it won't even take 2 seconds.
-#define DOOR_OPENING_TIME       15000                   // Time it takes for the garage door to open in milliseconds
-                                                        // The controller will wait this amount of time before it sends the message
-                                                        // to Homebridge to change the current and target door states
-
-#define MQTT_TIMEOUT            5000                    // The amount of milliseconds before retrying after failing to connect to MQTT 
-
-#define BLINK_DURATION          150                     // Time the relay gets its voltage switched before reverting in milliseconds
-#define BLINK_MIN_DELAY         750                     // Minimum milliseconds between two relay 'blinks'
-#define LEFT_OPEN_TIME          30                      // Seconds of door being left open until a notification is sent
+#define DEBOUNCE_DELAY          500                     // The delay in milliseconds to debounce the reed switch
+#define BLINK_DELAY             1000                    // The minimum delay between door activations. This is to prevent the door from being activated too quickly.
+#define BLINK_DURATION          150                     // The duration in milliseconds that the relay is activated
 
 */
